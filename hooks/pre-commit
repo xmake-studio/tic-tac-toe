@@ -1,0 +1,4 @@
+#!/bin/sh
+# перед коммитом проверяем стиль и тесты
+python -m flake8 . || exit 1
+python -m pytest -q --cov || exit 1

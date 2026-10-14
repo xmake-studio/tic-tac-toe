@@ -12,7 +12,10 @@ tictactoe/
     board.py   — поле 3x3: ходы, проверка победителя и ничьей
     bot.py     — выбор хода программы
     game.py    — партия: ход пользователя, ответ программы, статус игры
+    storage.py — хранилище игр
+server.py      — HTTP-сервер (Flask)
 tests/         — тесты pytest
+postman/       — коллекция запросов для Postman
 main.py        — примеры использования классов
 ```
 
@@ -86,6 +89,14 @@ pip install -r requirements.txt
 python main.py
 ```
 
+Запуск сервера:
+
+```bash
+python server.py
+```
+
+Для ручной проверки в Postman можно импортировать `postman/tic-tac-toe.postman_collection.json`.
+
 ## Тесты
 
 ```bash
@@ -93,6 +104,8 @@ pytest --cov
 ```
 
 Покрытие считается по веткам (настройки в `setup.cfg`), требуется 100%.
+
+Тесты API (`tests/test_api.py`) сами поднимают сервер на порту 8008 в отдельном потоке и отправляют ему запросы через `requests`.
 
 ## CI и линтер
 

@@ -1,6 +1,22 @@
-import requests
+import threading
 
-BASE_URL = "http://localhost:8008"
+import pytest
+import requests
+from werkzeug.serving import make_server
+
+from server import PORT, create_app
+
+BASE_URL = f"http://127.0.0.1:{PORT}"
+
+
+@pytest.fixture(scope="module", autouse=True)
+def server():
+    httpd = make_server("127.0.0.1", PORT, create_app())
+    thread = threading.Thread(target=httpd.serve_forever)
+    thread.start()
+    yield
+    httpd.shutdown()
+    thread.join()
 
 
 def create_game():

@@ -83,6 +83,16 @@ def test_move_after_finish():
         game.make_move(2, 2)
 
 
+def test_to_dict():
+    game = make_game()
+    game.make_move(1, 1)
+    data = game.to_dict()
+    assert data["id"] == game.id
+    assert data["status"] == IN_PROGRESS
+    assert data["board"][1][1] == "X"
+    assert data["board"][0][0] == "O"
+
+
 def test_invalid_move_does_not_change_status():
     game = make_game()
     game.make_move(1, 1)

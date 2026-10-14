@@ -40,6 +40,13 @@ class Game:
         self.status = self._calc_status()
         return bot_move
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "board": self.board.cells,
+            "status": self.status,
+        }
+
     def _calc_status(self):
         winner = self.board.winner()
         if winner == PLAYER:

@@ -1,10 +1,14 @@
+import os
+
 from flask import Flask, jsonify, request
+from pymongo import MongoClient
 
 from tictactoe.board import InvalidMoveError
 from tictactoe.game import Game, GameFinishedError
-from tictactoe.storage import MemoryStorage
+from tictactoe.storage import MongoStorage
 
 PORT = 8008
+MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
 
 
 def error(message, code):
@@ -14,7 +18,8 @@ def error(message, code):
 def create_app(storage=None):
     app = Flask(__name__)
     app.json.ensure_ascii = False
-    storage = storage or MemoryStorage()
+    if storage is None:
+        storage = MongoStorage(MongoClient(MONGO_URL).tictactoe.games)
 
     @app.post("/games")
     def create_game():

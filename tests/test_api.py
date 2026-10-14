@@ -1,17 +1,20 @@
 import threading
 
+import mongomock
 import pytest
 import requests
 from werkzeug.serving import make_server
 
 from server import PORT, create_app
+from tictactoe.storage import MongoStorage
 
 BASE_URL = f"http://127.0.0.1:{PORT}"
 
 
 @pytest.fixture(scope="module", autouse=True)
 def server():
-    httpd = make_server("127.0.0.1", PORT, create_app())
+    storage = MongoStorage(mongomock.MongoClient().tictactoe.games)
+    httpd = make_server("127.0.0.1", PORT, create_app(storage))
     thread = threading.Thread(target=httpd.serve_forever)
     thread.start()
     yield

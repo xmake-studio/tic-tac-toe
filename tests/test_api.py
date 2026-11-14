@@ -5,19 +5,25 @@ import pytest
 import requests
 from werkzeug.serving import make_server
 
-from server import PORT, create_app
+import server as server_module
+from server import create_app
+from tictactoe.board import Board
+from tictactoe.game import Game
 from tictactoe.storage import MongoStorage
 
-BASE_URL = f"http://127.0.0.1:{PORT}"
+BASE_URL = None
 
 
 @pytest.fixture(scope="module", autouse=True)
-def server():
+def storage():
+    global BASE_URL
     storage = MongoStorage(mongomock.MongoClient().tictactoe.games)
-    httpd = make_server("127.0.0.1", PORT, create_app(storage))
+    # порт 0: ОС выдаёт свободный порт, тесты не мешают запущенному серверу
+    httpd = make_server("127.0.0.1", 0, create_app(storage))
+    BASE_URL = f"http://127.0.0.1:{httpd.server_port}"
     thread = threading.Thread(target=httpd.serve_forever)
     thread.start()
-    yield
+    yield storage
     httpd.shutdown()
     thread.join()
 
@@ -113,3 +119,22 @@ def test_play_until_finish():
     assert data["status"] in ("player_won", "bot_won", "draw")
     response = move(game["id"], 0, 0)
     assert response.status_code == 409
+
+
+def test_player_wins_without_bot_move(storage):
+    game = Game(board=Board([["X", "X", None], ["O", "O", None], [None] * 3]))
+    storage.save(game)
+
+    response = move(game.id, 0, 2)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "player_won"
+    assert data["bot_move"] is None
+
+
+def test_default_storage_is_mongo(monkeypatch):
+    monkeypatch.setattr(server_module, "MongoClient", mongomock.MongoClient)
+    client = create_app().test_client()
+
+    game_id = client.post("/games").get_json()["id"]
+    assert client.get(f"/games/{game_id}").status_code == 200

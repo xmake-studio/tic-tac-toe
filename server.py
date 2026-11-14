@@ -7,8 +7,11 @@ from tictactoe.board import InvalidMoveError
 from tictactoe.game import Game, GameFinishedError
 from tictactoe.storage import MongoStorage
 
-PORT = 8008
+HOST = os.getenv("HOST", "127.0.0.1")
+PORT = int(os.getenv("PORT", "8008"))
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
+# без таймаута запрос при недоступной базе висит 30 секунд
+MONGO_TIMEOUT_MS = 3000
 
 
 def error(message, code):
@@ -19,7 +22,10 @@ def create_app(storage=None):
     app = Flask(__name__)
     app.json.ensure_ascii = False
     if storage is None:
-        storage = MongoStorage(MongoClient(MONGO_URL).tictactoe.games)
+        client = MongoClient(
+            MONGO_URL, serverSelectionTimeoutMS=MONGO_TIMEOUT_MS
+        )
+        storage = MongoStorage(client.tictactoe.games)
 
     @app.post("/games")
     def create_game():
@@ -65,4 +71,4 @@ def create_app(storage=None):
 
 
 if __name__ == "__main__":
-    create_app().run(port=PORT)
+    create_app().run(host=HOST, port=PORT)
